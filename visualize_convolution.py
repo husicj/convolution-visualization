@@ -41,36 +41,38 @@ class DataVisualizer:
         self.y_min = 0
         self.y_max = 10
 
-    def show_animation(self, update_list):
-        fig, axs = plt.subplots(len(update_list))
-        for ax in axs:
-            ax.set(xlim=[self.x_min, self.x_max])
-            ax.set(ylim=[self.y_min, self.y_max])
+    def show_animation(self, plotter_list):
+        fig, ax = plt.subplots()
+        ax.set(xlim=[self.x_min, self.x_max])
+        ax.set(ylim=[self.y_min, self.y_max])
 
-        def update(frame: int):
-            for i, update_func in enumerate(update_list):
-                plot = axs[i].plot([], [])[0]
-                update_func(plot, frame)
+        frames = len(self.x)
+        for frame in range(frames):
+            artist_list = []
+            for i, plotter in enumerate(plotter_list):
+                plot = plotter(ax, frame)
+                artist_list.append(plot)
+            artist_container = matplotlib.collections.LineCollection(artist_list)
+            artist_list.append(artist_container)
 
-        ani = animation.FuncAnimation(fig=fig,
-                                      func=update,
-                                      frames=len(self.x),
-                                      interval=15)
-        
+
+        # ani = animation.ArtistAnimation(fig=fig,
+        #                                 artists=artist_list,
+        #                                 interval=200)
+        # plt.show()
+        ax.add_collection(artist_list[-1])
         plt.show()
 
     def function_plotter(self, function: typing.Callable[[float], float]):
         x = self.x
         y = function(x)
 
-        def update(plot: matplotlib.lines.Line2D, frame: int):
+        def plotter(ax: matplotlib.axes.Axes, frame: int):
             X = x[:frame]
             Y = y[:frame]
-            plot.set_xdata(X)
-            plot.set_ydata(Y)
-            return plot
+            return np.column_stack([X, Y])
 
-        return update
+        return plotter
 
 
     def parameter_plotter(self,
@@ -104,4 +106,5 @@ class DataVisualizer:
 if __name__ == '__main__':
     dv = DataVisualizer((-10, 10), 100)
     f = dv.function_plotter(lambda x: x*x/10)
-    dv.show_animation([f, f])
+    g = dv.function_plotter(lambda x: x*x/5)
+    dv.show_animation([f, g])
