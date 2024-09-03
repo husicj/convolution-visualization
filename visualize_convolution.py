@@ -19,27 +19,73 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
-# class SamplingGrid(np.ndarray):
-#     """A two-dimensional grid of points at which a function can
-#        be sampled for visualization."""
+class Plotting_Image:
+    """A data structure representing an image, along with a number of
+       methods for modifying the image such as plotting points and
+       adding text."""
 
-#     def __init__(self, dimensions: tuple[float, float]):
-#         pass
+    def __init__(self,
+                 x_bounds: tuple[float, float],
+                 y_bounds: tuple[float, float],
+                 a_size: int = 100,
+                 b_size: int = 100):
+        self.image_array = np.zeros((a_size, b_size))
+        self.a_size = a_size
+        self.b_size = b_size
+        self.x_min = x_bounds[0]
+        self.x_max = x_bounds[1]
+        self.x_size = self.x_max - self.x_min
+        self.y_min = y_bounds[0]
+        self.y_max = y_bounds[1]
+        self.y_size = self.y_max - self.y_min
+
+    def _coordinate_to_pixel(self, x: float | np.ndarray, y: float | np.ndarray) -> (int, int):
+        if type(x) == 'int':
+            b = int((self.b_size - 1) * (x - self.x_min) / self.x_size)
+        else:
+            b = ((self.b_size - 1) * (x - self.x_min) / self.x_size).astype(int)
+        if type(y) == 'int':
+            a = self.a_size - int((self.a_size - 1) * (y - self.y_min) / self.y_size)
+        else:
+            a = self.a_size - ((self.a_size - 1) * (y - self.y_min) / self.y_size).astype(int)
+        return a, b
+
+
+    def plot(self, x: int | np.ndarray, y: int | np.ndarray):
+        a, b = self._coordinate_to_pixel(x, y)
+        if type(y) != 'int' or type(x) != 'int':
+            inside_bounds = (a >= 0) * (a < self.a_size) * (b >= 0) * (b < self.b_size)
+            a = a[inside_bounds]
+            b = b[inside_bounds]
+        try:
+            self.image_array[a, b] = 1
+        except IndexError:
+            print(f"Cannot plot point ({x}, {y}): it lies outside of the plotting canvas.")
+            print((a, b))
+
+    def show(self):
+        plt.imshow(self.image_array)
+        plt.show()
+
 
 class DataVisualizer:
     """A class containing the parameters necessary for the
        visualization of the data produced in this project."""
 
     def __init__(self,
-                 domain: tuple[float, float],
-                 resolution: float
+                 x_bounds: tuple[float, float],
+                 y_bounds: tuple[float, float],
+                 x_resolution: float,
+                 y_resolution: float
                  ):
-        self.x = np.linspace(domain[0], domain[1], resolution)
-        self.domainSize = domain[1] - domain[0]
-        self.x_min = domain[0]
-        self.x_max = domain[1]
-        self.y_min = 0
-        self.y_max = 10
+        self.canvas = Plotting_Image(x_bounds, y_bounds, x_resolution, y_resolution)
+        self.x_min = x_bounds[0]
+        self.x_max = x_bounds[1]
+        self.y_min = y_bounds[0]
+        self.y_max = y_bounds[1]
+        self.x = np.linspace(x_bounds[0], x_bounds[1], x_resolution)
+        self.y = np.linspace(y_bounds[0], y_bounds[1], y_resolution)
+        self.domainSize = x_bounds[1] - x_bounds[0]
 
     def show_animation(self, plotter_list):
         fig, ax = plt.subplots()
@@ -63,17 +109,10 @@ class DataVisualizer:
         ax.add_collection(artist_list[-1])
         plt.show()
 
-    def function_plotter(self, function: typing.Callable[[float], float]):
-        x = self.x
+    def function_plotter(self, function: typing.Callable[[float], float], x: np.ndarray):
         y = function(x)
-
-        def plotter(ax: matplotlib.axes.Axes, frame: int):
-            X = x[:frame]
-            Y = y[:frame]
-            return np.column_stack([X, Y])
-
-        return plotter
-
+        self.canvas.plot(x, y)
+        return self.canvas
 
     def parameter_plotter(self,
                           function: typing.Callable[[float, float], float]):
@@ -104,7 +143,7 @@ class DataVisualizer:
 
 
 if __name__ == '__main__':
-    dv = DataVisualizer((-10, 10), 100)
-    f = dv.function_plotter(lambda x: x*x/10)
-    g = dv.function_plotter(lambda x: x*x/5)
-    dv.show_animation([f, g])
+    dv = DataVisualizer((0, 10), (0, 100), 500, 500)
+    dv.function_plotter(lambda x: x*x, dv.x)
+    dv.canvas.show()
+
