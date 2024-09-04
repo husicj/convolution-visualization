@@ -165,13 +165,28 @@ class DataVisualizer:
         self.animation = Animation(animation_list)
         return self.animation
 
+class ConvolutionFunctions:
+    """A class containing all the relevant functions for convolution and plotting."""
 
+    def rectangle(x: float, t: float = 0) -> float:
+        """Rectangle function with height and width 1, centered at t."""
+        return (np.abs(x - t) < 0.5).astype(float)
+
+    def right_triangle(x: float, t: float = 0) -> float:
+        """Downward sloping isoceles right triangle with height 1, and discontinuity at t."""
+        return (0 <= x - t).astype(float) * (x - t < 1).astype(float) * (1 - x + t)
+
+    def isoceles_triangle(x: float, t: float = 0) -> float:
+        """Isoceles right triangle with base along x axis, with height 1, base 2, and centered at 0."""
+        return (np.abs(x - t) < 1).astype(float) * (1 - np.abs(x - t))
+
+    def exponential(x: float, t: float = 0) -> float:
+        """Decreasing exponential function with y = 1 at x = t."""
+        return np.exp(t - x)
 
 if __name__ == '__main__':
-    dv = DataVisualizer((-10, 10), (-2, 2), 500, 500)
-    t = np.linspace(-10, 10, 101)
-    def rectangle(x, t):
-        return (np.abs(x - t) < 0.5).astype(float)
-    dv.parameter_animation(rectangle, dv.x, t)
+    dv = DataVisualizer((-3, 3), (-3, 3), 500, 500)
+    t = np.linspace(-3, 3, 100)
+    dv.parameter_animation(ConvolutionFunctions.exponential, dv.x, t)
     dv.animation.save('parameter_test')
 
