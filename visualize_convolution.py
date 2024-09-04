@@ -14,8 +14,7 @@
 
 import typing
 
-import matplotlib.axes
-import matplotlib.animation as animation
+# import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -54,10 +53,11 @@ class Plotting_Image:
         return a, b
 
 
-    def clear(self):
+    def clear(self) -> typing.Self:
         self.image_array *= 0
+        return self
 
-    def copy(self):
+    def copy(self) -> typing.Self:
         ret = Plotting_Image((self.x_min, self.x_max),
                              (self.y_min, self.y_max),
                              self.a_size,
@@ -65,7 +65,10 @@ class Plotting_Image:
         ret.image_array = self.image_array.copy()
         return ret
 
-    def plot(self, x: int | np.ndarray, y: int | np.ndarray):
+    def plot(self, x: int | np.ndarray,
+             y: int | np.ndarray,
+             thickness: int = 0
+             ) -> None:
         a, b = self._coordinate_to_pixel(x, y)
         if type(y) != 'int' or type(x) != 'int':
             inside_bounds = (a >= 0) * (a < self.a_size) * (b >= 0) * (b < self.b_size)
@@ -73,14 +76,17 @@ class Plotting_Image:
             b = b[inside_bounds]
         try:
             self.image_array[a, b] = 255
+            if thickness > 0:
+                for pixel in range(thickness):
+                    self.image_array[a, b + pixel] = 255
+                    self.image_array[a, b - pixel] = 255
         except IndexError:
-            print(f"Cannot plot point ({x}, {y}): it lies outside of the plotting canvas.")
-            print((a, b))
+            pass
 
-    def save(self, filename: str):
+    def save(self, filename: str) -> None:
         pass
 
-    def show(self):
+    def show(self) -> None:
         plt.imshow(self.image_array)
         plt.show()
 
@@ -90,7 +96,7 @@ class Animation:
     def __init__(self, image_list: typing.List[Plotting_Image]):
         self.image_list = image_list
 
-    def save(self, filename: str):
+    def save(self, filename: str) -> None:
         images = []
         for frame, image in enumerate(self.image_list):
             images.append(Image.fromarray(image.image_array))
@@ -110,6 +116,7 @@ class DataVisualizer:
                  y_resolution: float
                  ):
         self.canvas = Plotting_Image(x_bounds, y_bounds, x_resolution, y_resolution)
+        self.line_thickness = 2
 
         self.x_min = x_bounds[0]
         self.x_max = x_bounds[1]
@@ -119,49 +126,52 @@ class DataVisualizer:
         self.y = np.linspace(y_bounds[0], y_bounds[1], y_resolution)
         self.domainSize = x_bounds[1] - x_bounds[0]
 
-    def function_plotter(self, function: typing.Callable[[float], float], x: np.ndarray):
+    def function_plotter(self,
+                         function: typing.Callable[[float], float],
+                         x: np.ndarray
+                         ) -> Plotting_Image:
         y = function(x)
-        self.canvas.plot(x, y)
+        self.canvas.plot(x, y, self.line_thickness)
         return self.canvas.copy()
 
-    def plot_animation(self, function: typing.Callable[[float], float], x: np.ndarray):
+    def function_animation(self,
+                           function: typing.Callable[[float], float],
+                           x: np.ndarray
+                           ) -> Animation:
         animation_list = []
         for frame in range(len(x)):
             animation_list.append(self.function_plotter(function, x[frame]))
-        print(len(animation_list))
         self.animation = Animation(animation_list)
         return self.animation
 
     def parameter_plotter(self,
-                          function: typing.Callable[[float, float], float]):
-        t = 0
-        x = self.x
+                          function: typing.Callable[[float, float], float],
+                          x: np.ndarray,
+                          t: float
+                          ) -> Plotting_Image:
         y = function(x, t)
-        self.y_min = 1.1 * min(self.y_min, np.min(y))
-        self.y_max = 1.1 * max(self.y_max, np.max(y))
-        fig, ax = plt.subplots()
-        func_plot = ax.plot(x, y)[0]
-        ax.set(xlim=[self.x_min, self.x_max],
-               ylim=[self.y_min, self.y_max])
+        self.canvas.plot(x, y, self.line_thickness)
+        return self.canvas.copy()
 
-        def update(frame: int):
-            X = x
-            Y = function(x, frame)
-            func_plot.set_xdata(X)
-            func_plot.set_ydata(Y)
-            return func_plot
-
-        ani = animation.FuncAnimation(fig=fig,
-                                      func=update,
-                                      frames=150,
-                                      interval=100)
-
-        plt.show()
+    def parameter_animation(self,
+                               function: typing.Callable[[float, float], float],
+                               x: np.ndarray,
+                               t: np.ndarray
+                            ) -> Animation:
+        animation_list = []
+        for frame in range(len(t)):
+            self.canvas.clear()
+            animation_list.append(self.parameter_plotter(function, x, t[frame]))
+        self.animation = Animation(animation_list)
+        return self.animation
 
 
 
 if __name__ == '__main__':
-    dv = DataVisualizer((0, 10), (0, 100), 500, 500)
-    dv.plot_animation(lambda x: x*x, dv.x)
-    dv.animation.save('test')
+    dv = DataVisualizer((-10, 10), (-2, 2), 500, 500)
+    t = np.linspace(-10, 10, 101)
+    def rectangle(x, t):
+        return (np.abs(x - t) < 0.5).astype(float)
+    dv.parameter_animation(rectangle, dv.x, t)
+    dv.animation.save('parameter_test')
 
