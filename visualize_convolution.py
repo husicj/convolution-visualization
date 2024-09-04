@@ -19,6 +19,9 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
+from PIL import Image
+from PIL import ImageDraw
+
 class Plotting_Image:
     """A data structure representing an image, along with a number of
        methods for modifying the image such as plotting points and
@@ -51,6 +54,17 @@ class Plotting_Image:
         return a, b
 
 
+    def clear(self):
+        self.image_array *= 0
+
+    def copy(self):
+        ret = Plotting_Image((self.x_min, self.x_max),
+                             (self.y_min, self.y_max),
+                             self.a_size,
+                             self.b_size)
+        ret.image_array = self.image_array.copy()
+        return ret
+
     def plot(self, x: int | np.ndarray, y: int | np.ndarray):
         a, b = self._coordinate_to_pixel(x, y)
         if type(y) != 'int' or type(x) != 'int':
@@ -58,14 +72,31 @@ class Plotting_Image:
             a = a[inside_bounds]
             b = b[inside_bounds]
         try:
-            self.image_array[a, b] = 1
+            self.image_array[a, b] = 255
         except IndexError:
             print(f"Cannot plot point ({x}, {y}): it lies outside of the plotting canvas.")
             print((a, b))
 
+    def save(self, filename: str):
+        pass
+
     def show(self):
         plt.imshow(self.image_array)
         plt.show()
+
+class Animation:
+    """A collection of Plotting_Image objects that represents an animation."""
+
+    def __init__(self, image_list: typing.List[Plotting_Image]):
+        self.image_list = image_list
+
+    def save(self, filename: str):
+        images = []
+        for frame, image in enumerate(self.image_list):
+            images.append(Image.fromarray(image.image_array))
+            drawing = ImageDraw.Draw(images[-1])
+            drawing.text((10,10), f"{frame}", fill=255)
+        images[0].save(filename + '.gif', append_images=images[1:], save_all=True, duration=1)
 
 
 class DataVisualizer:
@@ -79,6 +110,7 @@ class DataVisualizer:
                  y_resolution: float
                  ):
         self.canvas = Plotting_Image(x_bounds, y_bounds, x_resolution, y_resolution)
+
         self.x_min = x_bounds[0]
         self.x_max = x_bounds[1]
         self.y_min = y_bounds[0]
@@ -87,32 +119,18 @@ class DataVisualizer:
         self.y = np.linspace(y_bounds[0], y_bounds[1], y_resolution)
         self.domainSize = x_bounds[1] - x_bounds[0]
 
-    def show_animation(self, plotter_list):
-        fig, ax = plt.subplots()
-        ax.set(xlim=[self.x_min, self.x_max])
-        ax.set(ylim=[self.y_min, self.y_max])
-
-        frames = len(self.x)
-        for frame in range(frames):
-            artist_list = []
-            for i, plotter in enumerate(plotter_list):
-                plot = plotter(ax, frame)
-                artist_list.append(plot)
-            artist_container = matplotlib.collections.LineCollection(artist_list)
-            artist_list.append(artist_container)
-
-
-        # ani = animation.ArtistAnimation(fig=fig,
-        #                                 artists=artist_list,
-        #                                 interval=200)
-        # plt.show()
-        ax.add_collection(artist_list[-1])
-        plt.show()
-
     def function_plotter(self, function: typing.Callable[[float], float], x: np.ndarray):
         y = function(x)
         self.canvas.plot(x, y)
-        return self.canvas
+        return self.canvas.copy()
+
+    def plot_animation(self, function: typing.Callable[[float], float], x: np.ndarray):
+        animation_list = []
+        for frame in range(len(x)):
+            animation_list.append(self.function_plotter(function, x[frame]))
+        print(len(animation_list))
+        self.animation = Animation(animation_list)
+        return self.animation
 
     def parameter_plotter(self,
                           function: typing.Callable[[float, float], float]):
@@ -144,6 +162,6 @@ class DataVisualizer:
 
 if __name__ == '__main__':
     dv = DataVisualizer((0, 10), (0, 100), 500, 500)
-    dv.function_plotter(lambda x: x*x, dv.x)
-    dv.canvas.show()
+    dv.plot_animation(lambda x: x*x, dv.x)
+    dv.animation.save('test')
 
