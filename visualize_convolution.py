@@ -1,4 +1,4 @@
-# GOALS:
+#GOALS:
 #   generate visualizations of convolutions between:
 #      rectangle
 #      isoceles triangle
@@ -164,6 +164,25 @@ class DataVisualizer:
             animation_list.append(self.parameter_plotter(function, x, t[frame]))
         self.animation = Animation(animation_list)
         return self.animation
+
+class Convolution:
+    def __init__(self, sample_width: float, xbounds: tuple[float, float]):
+        self.sample_width = sample_width
+        self.x_min = xbounds[0]
+        self.x_max = xbounds[1]
+        self.sample_count = (self.x_max - self.x_min) // self.sample_width
+        self.sampling = np.linspace(self.x_min, self.x_max, self.sample_count)
+        
+    def convolve(self,
+                 f: typing.Callable[[float], float], 
+                 g: typing.Callable[[float], float]
+                 ) -> typing.Callable[[float], float]:
+        def convolution(x: float) -> float:
+            # return (f(sampling) * g(sampling) * self.sample_width).sum()
+            acc = 0
+            for sample in sampling:
+                acc += f(sample) * g(x - sample) * self.sample_width 
+            return acc
 
 class ConvolutionFunctions:
     """A class containing all the relevant functions for convolution and plotting."""
