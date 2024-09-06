@@ -136,11 +136,15 @@ class DataVisualizer:
 
     def function_animation(self,
                            function: typing.Callable[[float], float],
-                           x: np.ndarray
+                           x: np.ndarray,
+                           frame_spacing: int = 1
                            ) -> Animation:
         animation_list = []
         for frame in range(len(x)):
-            animation_list.append(self.function_plotter(function, x[frame]))
+            image = self.function_plotter(function, x[frame])
+            # add every (frame_spacing)-th image to animation
+            if not (frame % frame_spacing):
+                animation_list.append(image)
         self.animation = Animation(animation_list)
         return self.animation
 
@@ -154,14 +158,17 @@ class DataVisualizer:
         return self.canvas.copy()
 
     def parameter_animation(self,
-                               function: typing.Callable[[float, float], float],
-                               x: np.ndarray,
-                               t: np.ndarray
+                            function: typing.Callable[[float, float], float],
+                            x: np.ndarray,
+                            t: np.ndarray,
+                            frame_spacing: int = 1
                             ) -> Animation:
         animation_list = []
         for frame in range(len(t)):
-            self.canvas.clear()
-            animation_list.append(self.parameter_plotter(function, x, t[frame]))
+            # add every (frame_spacing)-th image to animation
+            if not (frame % frame_spacing):
+                self.canvas.clear()
+                animation_list.append(self.parameter_plotter(function, x, t[frame]))
         self.animation = Animation(animation_list)
         return self.animation
 
@@ -209,5 +216,5 @@ if __name__ == '__main__':
     # dv.parameter_animation(ConvolutionFunctions.exponential, dv.x, t)
     conv = Convolution(0.001, (-3, 3))
     fg = conv.convolve(ConvolutionFunctions.rectangle, ConvolutionFunctions.right_triangle)
-    plot = dv.function_animation(fg, dv.x)
+    plot = dv.function_animation(fg, dv.x, frame_spacing=5)
     plot.save('conv')
