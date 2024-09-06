@@ -71,7 +71,7 @@ class Plotting_Image:
              ) -> None:
         a, b = self._coordinate_to_pixel(x, y)
         if type(y) != 'int' or type(x) != 'int':
-            inside_bounds = (a >= 0) * (a < self.a_size - 1) * (b >= 0) * (b < self.b_size - 1)
+            inside_bounds = (a >= 0) * (a < self.a_size) * (b >= 0) * (b < self.b_size)
             a = a[inside_bounds]
             b = b[inside_bounds]
         try:
@@ -177,12 +177,11 @@ class Convolution:
                  f: typing.Callable[[float], float], 
                  g: typing.Callable[[float], float]
                  ) -> typing.Callable[[float], float]:
+        # precompute the sampling of f and the multiplication by the sample width
+        # so that it does not need to be repeated for each function call
+        scaled_sampled_f = self.sample_width * f(self.sampling)
         def convolution(x: float) -> float:
-            # return (f(sampling) * g(sampling) * self.sample_width).sum()
-            acc = 0
-            for sample in self.sampling:
-                acc += f(sample) * g(x - sample) * self.sample_width 
-            return acc
+            return (scaled_sampled_f * g(x - self.sampling)).sum()
         return convolution
 
 class ConvolutionFunctions:
