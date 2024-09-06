@@ -71,7 +71,7 @@ class Plotting_Image:
              ) -> None:
         a, b = self._coordinate_to_pixel(x, y)
         if type(y) != 'int' or type(x) != 'int':
-            inside_bounds = (a >= 0) * (a < self.a_size) * (b >= 0) * (b < self.b_size)
+            inside_bounds = (a >= 0) * (a < self.a_size - 1) * (b >= 0) * (b < self.b_size - 1)
             a = a[inside_bounds]
             b = b[inside_bounds]
         try:
@@ -170,7 +170,7 @@ class Convolution:
         self.sample_width = sample_width
         self.x_min = xbounds[0]
         self.x_max = xbounds[1]
-        self.sample_count = (self.x_max - self.x_min) // self.sample_width
+        self.sample_count = 1 + int((self.x_max - self.x_min) / self.sample_width)
         self.sampling = np.linspace(self.x_min, self.x_max, self.sample_count)
         
     def convolve(self,
@@ -180,9 +180,10 @@ class Convolution:
         def convolution(x: float) -> float:
             # return (f(sampling) * g(sampling) * self.sample_width).sum()
             acc = 0
-            for sample in sampling:
+            for sample in self.sampling:
                 acc += f(sample) * g(x - sample) * self.sample_width 
             return acc
+        return convolution
 
 class ConvolutionFunctions:
     """A class containing all the relevant functions for convolution and plotting."""
@@ -204,8 +205,10 @@ class ConvolutionFunctions:
         return np.exp(t - x)
 
 if __name__ == '__main__':
-    dv = DataVisualizer((-3, 3), (-3, 3), 500, 500)
-    t = np.linspace(-3, 3, 100)
-    dv.parameter_animation(ConvolutionFunctions.exponential, dv.x, t)
-    dv.animation.save('parameter_test')
-
+    dv = DataVisualizer((-2, 2), (-2, 2), 500, 500)
+    t = np.linspace(-2, 2, 100)
+    # dv.parameter_animation(ConvolutionFunctions.exponential, dv.x, t)
+    conv = Convolution(0.001, (-3, 3))
+    fg = conv.convolve(ConvolutionFunctions.rectangle, ConvolutionFunctions.right_triangle)
+    plot = dv.function_animation(fg, dv.x)
+    plot.save('conv')
