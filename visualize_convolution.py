@@ -14,7 +14,6 @@
 
 import typing
 
-# import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -48,6 +47,8 @@ class PlottingImage:
             self.draw_axes()
 
     def _coordinate_to_pixel(self, x: float | np.ndarray, y: float | np.ndarray) -> (int, int):
+        """Converts Cartesian coordinates to pixel coordinates so that a point
+        can be drawn onto an the image."""
         if type(x) == float:
             b = int((self.b_size - 1) * (x - self.x_min) / self.x_size)
         else:
@@ -59,10 +60,12 @@ class PlottingImage:
         return a, b
 
     def clear(self) -> typing.Self:
+        """Resets the image to self.base_image_array."""
         self.image_array = self.base_image_array.copy()
         return self
 
     def copy(self) -> typing.Self:
+        """Returns a copy of this object that can be passed by by reference safely."""
         ret = PlottingImage((self.x_min, self.x_max),
                              (self.y_min, self.y_max),
                              self.a_size,
@@ -72,6 +75,7 @@ class PlottingImage:
         return ret
 
     def draw_axes(self):
+        """Draw coordinate axes of the Cartesian plane onto the image."""
         y_axis, x_axis = self._coordinate_to_pixel(0., 0.)
         y_integer_bounds = (np.floor(self.y_min + 1), np.ceil(self.y_max - 1))
         x_integer_bounds = (np.floor(self.x_min + 1), np.ceil(self.x_max - 1))
@@ -98,6 +102,7 @@ class PlottingImage:
              thickness: int = 0,
              color: tuple[int, int, int] = (255, 255, 255)
              ) -> None:
+        """Draw a point in Cartesian space onto the image."""
         a, b = self._coordinate_to_pixel(x, y)
         if type(y) != 'int' or type(x) != 'int':
             inside_bounds = (a >= 0) * (a < self.a_size) * (b >= 0) * (b < self.b_size)
@@ -113,6 +118,7 @@ class PlottingImage:
             pass
 
     def show(self) -> None:
+        """Shows the image using matplotlib for quick reference."""
         plt.imshow(self.image_array)
         plt.show()
 
@@ -134,14 +140,16 @@ class Animation:
         self.legend = []
 
     def copy(self) -> typing.Self:
+        """Returns a copy of this object that can be passed by reference safely."""
         return Animation(self.image_list.copy())
 
     def _draw_legend(self, drawing):
+        """Draw the plot legend onto the images in the animation."""
         for i, item in enumerate(self.legend):
-            drawing.text((300, 30 + 10 * i), item[0], fill=item[1])
-
+            drawing.text((400, 60 + 10 * i), item[0], fill=item[1])
 
     def save(self, filename: str) -> None:
+        """Save the animation to a .gif file."""
         images = []
         for frame, image in enumerate(self.image_list):
             # reordering dimensions to format taken by PIL.Image
@@ -154,9 +162,11 @@ class Animation:
         images[0].save(filename + '.gif', append_images=images[1:], save_all=True, duration=1)
 
     def add_title(self, title: str):
+        """Add a title to the images in the animation."""
         self.title = title
 
     def add_legend(self, legend: list):
+        """Add a legend to the images in the animation."""
         self.legend = legend
 
 
@@ -186,6 +196,7 @@ class DataVisualizer:
                          x: np.ndarray,
                          color: tuple[int, int, int] = (255, 255, 255)
                          ) -> PlottingImage:
+        """Plots a function at the values in x onto the canvas."""
         y = function(x)
         self.canvas.plot(x, y, self.line_thickness, color=color)
         return self.canvas.copy()
@@ -196,6 +207,8 @@ class DataVisualizer:
                            frame_spacing: int = 1,
                            color: tuple[int, int, int] = (255, 255, 255)
                            ) -> Animation:
+        """Creates an animation plotting a function from the lower x bound
+        of the canvas to the upper x bound."""
         animation_list = []
         for frame in range(len(x)):
             plot = self.function_plotter(function, x[frame], color=color)
@@ -218,6 +231,8 @@ class DataVisualizer:
                           t: float,
                           color: tuple[int, int, int] = (255, 255, 255)
                           ) -> PlottingImage:
+        """Plots a function on the range of x values, for a given parameter
+        of the function t."""
         y = function(x, t)
         self.canvas.plot(x, y, self.line_thickness, color=color)
         return self.canvas.copy()
@@ -229,6 +244,8 @@ class DataVisualizer:
                             frame_spacing: int = 1,
                             color: tuple[int, int, int] = (255, 255, 255)
                             ) -> Animation:
+        """Plots an animation of a family of functions of x onto the canvas,
+        varying the parameter t of the family for each frame."""
         animation_list = []
         for frame in range(len(t)):
             # add every (frame_spacing)-th image to animation
@@ -248,6 +265,8 @@ class DataVisualizer:
                                          function_color: tuple[int, int, int] = (255, 255, 255),
                                          parameter_function_color: tuple[int, int, int] = (255, 255, 255)
                                          ) -> Animation:
+        """Performs the function and parameter plotter animations
+        simultaneously to the canvas."""
         animation_list = []
         for frame in range(len(t)):
             # add every (frame_spacing)-th image to animation
@@ -265,6 +284,8 @@ class DataVisualizer:
                               g: typing.Callable[[float, float], float],
                               frame_spacing: int = 1
                               ) -> Animation:
+        """Creates an animation to visualize the convolution of the
+        functions f and g."""
         self.function_plotter(g, self.x, color = (255, 0, 0))
         self.lock_canvas()
         # a convolution sampling two x values for every pixel
@@ -349,23 +370,23 @@ if __name__ == '__main__':
     plot2.save('rectangle_and_exponential')
 
     dv3 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    plot3 = dv3.visualize_convolution(ConvolutionFunctions.right_triangle,
-                                     ConvolutionFunctions.isoceles_triangle,
+    plot3 = dv3.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
+                                     ConvolutionFunctions.right_triangle,
                                      frame_spacing=5)
     plot3.add_title("Convolution of right triangle and isoceles triangle functions")
-    plot3.add_legend([("right triangle", (0,0,255)), ("isoceles triangle", (255,0,0)), ("convolution", (0,255,0))])
+    plot3.add_legend([("right triangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
     plot3.save('right_and_isoceles_triangles')
 
     dv4 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    plot4 = dv4.visualize_convolution(ConvolutionFunctions.right_triangle,
-                                     ConvolutionFunctions.exponential,
+    plot4 = dv4.visualize_convolution(ConvolutionFunctions.exponential,
+                                     ConvolutionFunctions.right_triangle,
                                      frame_spacing=5)
     plot4.add_title("Convolution of right triangle and truncated exponential functions")
-    plot4.add_legend([("right triangle", (0,0,255)), ("exponential", (255,0,0)), ("convolution", (0,255,0))])
+    plot4.add_legend([("exponential", (0,0,255)), ("right triangle", (255,0,0)), ("convolution", (0,255,0))])
     plot4.save('right_triangle_and_exponential')
 
     dv5 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    plot5 = dv5.visualize_convolution(ConvolutionFunctions.right_triangle,
+    plot5 = dv5.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
                                      ConvolutionFunctions.exponential,
                                      frame_spacing=5)
     plot5.add_title("Convolution of isoceles triangle and truncated exponential functions")
