@@ -283,7 +283,8 @@ class DataVisualizer:
     def visualize_convolution(self,
                               f: typing.Callable[[float, float], float],
                               g: typing.Callable[[float, float], float],
-                              frame_spacing: int = 1
+                              frame_spacing: int = 1,
+                              g_is_delta = False
                               ) -> Animation:
         """Creates an animation to visualize the convolution of the
         functions f and g."""
@@ -292,9 +293,15 @@ class DataVisualizer:
         # a convolution sampling two x values for every pixel
         convolution = Convolution((self.x[1] - self.x[0])/2, (self.x_min, self.x_max))
         f_conv_g = convolution.convolve(f, g)
+        g_plotting_factor = 1
+        if g_is_delta:
+            # plots the very tall narrow Gaussian as shorter to fit into frame more clearly
+            # as an approximation of a delta function, its exact appearance is not entirely
+            # relevant
+            g_plotting_factor = 1/50
         # g is reversed in plotting to match the definition of convolution
         return self.function_and_parameter_animation(f_conv_g,
-                                                     lambda x, t: g(-x, -t),
+                                                     lambda x, t: g_plotting_factor * g(-x, -t),
                                                      self.x,
                                                      self.x,
                                                      frame_spacing=5,
@@ -364,14 +371,19 @@ class ConvolutionFunctions:
         return np.array(0 <= x - t).astype(float) * np.exp(t - x)
 
     @classmethod
-    def delta(cls, x: float, t: float = 0, sample_width: float = 0.01) -> float:
-        """Dirac delta function. The sample width is required for proper behavior as an integration
-        measure."""
-        return np.array(x == t).astype(float) / sample_width
+    def delta(cls, x: float, t: float = 0, a: float = 0.01) -> float:
+        """Aproximation of the Dirac delta function as a narrow Gaussian.
+        A true delta function sampled at finite points will look identical
+        to a constantly zero function unless it is sampled exactly at its
+        center, which is unlikely in general, and so makes in non useful
+        for these computations."""
+        return np.exp(-((x-t)/a)**2) / (np.abs(a) * np.sqrt(np.pi))
 
     def __iter__(self):
         return (function for function in self.functions)
 
+    def __len__(self):
+        return len(self.functions)
 
 if __name__ == '__main__':
     dv0 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
