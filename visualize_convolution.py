@@ -192,6 +192,14 @@ class DataVisualizer:
         self.y = np.linspace(y_bounds[0], y_bounds[1], y_resolution)
         self.domainSize = x_bounds[1] - x_bounds[0]
 
+    def area_plotter(self,
+                     x: np.ndarray,
+                     y: np.ndarray,
+                     color: tuple[int, int, int] = (128, 128, 128)
+                     ) -> PlottingImage:
+        """Fills the area of x and y coordinates in the canvas."""
+        self.canvas.plot(x, y, color=color)
+
     def function_plotter(self,
                          function: typing.Callable[[float], float],
                          x: np.ndarray,
@@ -230,11 +238,19 @@ class DataVisualizer:
                           function: typing.Callable[[float, float], float],
                           x: np.ndarray,
                           t: float,
-                          color: tuple[int, int, int] = (255, 255, 255)
+                          color: tuple[int, int, int] = (255, 255, 255),
+                          overlap_function: typing.Callable[[float], float] | None = None
                           ) -> PlottingImage:
         """Plots a function on the range of x values, for a given parameter
         of the function t."""
         y = function(x, t)
+        if overlap_function is not None:
+            f_x = overlap_function(x)
+            overlap = x[y * f_x != 0]
+            for x_val in overlap:
+                Y = np.array([y for y in self.y if y > 0 and y < min(overlap_function(x_val), function(x_val, t))])
+                X = np.repeat(x_val, len(Y))
+                self.area_plotter(X, Y)
         self.canvas.plot(x, y, self.line_thickness, color=color)
         return self.canvas.copy()
 
@@ -264,18 +280,23 @@ class DataVisualizer:
                                          t: np.ndarray,
                                          frame_spacing: int = 1,
                                          function_color: tuple[int, int, int] = (255, 255, 255),
-                                         parameter_function_color: tuple[int, int, int] = (255, 255, 255)
+                                         parameter_function_color: tuple[int, int, int] = (255, 255, 255),
+                                         overlap_function: typing.Callable[[float], float] | None = None
                                          ) -> Animation:
         """Performs the function and parameter plotter animations
         simultaneously to the canvas."""
         animation_list = []
         for frame in range(len(t)):
-            # add every (frame_spacing)-th image to animation
             function_plot = self.function_plotter(function, x[frame], color=function_color)
             self.lock_canvas()
+            # add every (frame_spacing)-th image to animation
             if not (frame % frame_spacing):
-                parameter_plot = self.parameter_plotter(parameter_function, x, t[frame], color=parameter_function_color)
-                animation_list.append(parameter_plot)
+                parameter_plot = self.parameter_plotter(parameter_function,
+                                                        x,
+                                                        t[frame],
+                                                        color=parameter_function_color,
+                                                        overlap_function=overlap_function)
+                animation_list.append(plot)
                 self.canvas.clear()
         self.animation = Animation(animation_list)
         return self.animation.copy()
@@ -306,7 +327,8 @@ class DataVisualizer:
                                                      self.x,
                                                      frame_spacing=5,
                                                      function_color=(0,255,0),
-                                                     parameter_function_color=(0,0,255)
+                                                     parameter_function_color=(0,0,255),
+                                                     overlap_function=f
                                                      )
 
 class Convolution:
@@ -394,42 +416,42 @@ if __name__ == '__main__':
     plot0.add_legend([("rectangle", (255,0,0)), ("right triangle", (0,0,255)), ("convolution", (0,255,0))])
     plot0.save('rectangle_and_right_triangle')
 
-    dv1 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    plot1 = dv1.visualize_convolution(ConvolutionFunctions.rectangle,
-                                      ConvolutionFunctions.isoceles_triangle,
-                                      frame_spacing=5)
-    plot1.add_title("Convolution of rectangle and isoceles triangle functions")
-    plot1.add_legend([("rectangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
-    plot1.save('rectangle_and_isoceles_triangle')
+    # dv1 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
+    # plot1 = dv1.visualize_convolution(ConvolutionFunctions.rectangle,
+    #                                   ConvolutionFunctions.isoceles_triangle,
+    #                                   frame_spacing=5)
+    # plot1.add_title("Convolution of rectangle and isoceles triangle functions")
+    # plot1.add_legend([("rectangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
+    # plot1.save('rectangle_and_isoceles_triangle')
 
-    dv2 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 1000)
-    plot2 = dv2.visualize_convolution(ConvolutionFunctions.rectangle,
-                                      ConvolutionFunctions.exponential,
-                                      frame_spacing=5)
-    plot2.add_title("Convolution of rectangle and truncated exponential functions")
-    plot2.add_legend([("rectangle", (255,0,0)), ("exponential", (0,0,255)), ("convolution", (0,255,0))])
-    plot2.save('rectangle_and_exponential')
+    # dv2 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 1000)
+    # plot2 = dv2.visualize_convolution(ConvolutionFunctions.rectangle,
+    #                                   ConvolutionFunctions.exponential,
+    #                                   frame_spacing=5)
+    # plot2.add_title("Convolution of rectangle and truncated exponential functions")
+    # plot2.add_legend([("rectangle", (255,0,0)), ("exponential", (0,0,255)), ("convolution", (0,255,0))])
+    # plot2.save('rectangle_and_exponential')
 
-    dv3 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    plot3 = dv3.visualize_convolution(ConvolutionFunctions.right_triangle,
-                                      ConvolutionFunctions.isoceles_triangle,
-                                      frame_spacing=5)
-    plot3.add_title("Convolution of right triangle and isoceles triangle functions")
-    plot3.add_legend([("right triangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
-    plot3.save('right_and_isoceles_triangles')
+    # dv3 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
+    # plot3 = dv3.visualize_convolution(ConvolutionFunctions.right_triangle,
+    #                                   ConvolutionFunctions.isoceles_triangle,
+    #                                   frame_spacing=5)
+    # plot3.add_title("Convolution of right triangle and isoceles triangle functions")
+    # plot3.add_legend([("right triangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
+    # plot3.save('right_and_isoceles_triangles')
 
-    dv4 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
-    plot4 = dv4.visualize_convolution(ConvolutionFunctions.right_triangle,
-                                      ConvolutionFunctions.exponential,
-                                      frame_spacing=5)
-    plot4.add_title("Convolution of right triangle and truncated exponential functions")
-    plot4.add_legend([("exponential", (0,0,255)), ("right triangle", (255,0,0)), ("convolution", (0,255,0))])
-    plot4.save('right_triangle_and_exponential')
+    # dv4 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
+    # plot4 = dv4.visualize_convolution(ConvolutionFunctions.right_triangle,
+    #                                   ConvolutionFunctions.exponential,
+    #                                   frame_spacing=5)
+    # plot4.add_title("Convolution of right triangle and truncated exponential functions")
+    # plot4.add_legend([("exponential", (0,0,255)), ("right triangle", (255,0,0)), ("convolution", (0,255,0))])
+    # plot4.save('right_triangle_and_exponential')
 
-    dv5 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
-    plot5 = dv5.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
-                                      ConvolutionFunctions.exponential,
-                                      frame_spacing=5)
-    plot5.add_title("Convolution of isoceles triangle and truncated exponential functions")
-    plot5.add_legend([("isoceles triangle", (255,0,0)), ("exponential", (0, 0, 255)), ("convolution", (0,255,0))])
-    plot5.save('isoceles_triangle_and_exponential')
+    # dv5 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
+    # plot5 = dv5.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
+    #                                   ConvolutionFunctions.exponential,
+    #                                   frame_spacing=5)
+    # plot5.add_title("Convolution of isoceles triangle and truncated exponential functions")
+    # plot5.add_legend([("isoceles triangle", (255,0,0)), ("exponential", (0, 0, 255)), ("convolution", (0,255,0))])
+    # plot5.save('isoceles_triangle_and_exponential')
