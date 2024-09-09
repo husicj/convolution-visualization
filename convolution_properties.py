@@ -20,7 +20,7 @@ for f in functions:
             acc_commutative += (fg(t) - gf(t)) ** 2
         print(f"(f: {f.__name__}; g: {g.__name__}) " +
               f"RMSD between f * g and g * f: {np.sqrt(acc_commutative/len(TEST_RANGE))}")
-        mean_commutative += acc_commutative / len(TEST_RANGE) / len(functions)**2
+        mean_commutative += np.sqrt(acc_commutative) / len(TEST_RANGE) / len(functions)**2
 
 # Associativity
 print("\nAssociativity:")
@@ -35,7 +35,7 @@ for f in functions:
                 acc_associative += (f_gh(t) - fg_h(t)) ** 2
             print(f"(f: {f.__name__}; g: {g.__name__}) " +
                   f"RMSD between f*(g*h) and (f*g)*h: {np.sqrt(acc_associative/len(TEST_RANGE))}")
-            mean_associative += acc_associative / len(TEST_RANGE) / len(functions)**3
+            mean_associative += np.sqrt(acc_associative) / len(TEST_RANGE) / len(functions)**3
 
 # Distributivity
 
@@ -51,7 +51,7 @@ for f in functions:
                 acc_distributive += (f_gplush(t) - fg_plus_fh(t)) ** 2
             print(f"(f: {f.__name__}; g: {g.__name__}) " +
                   f"RMSD between f*(g+h) and (f*g)+(f*h): {np.sqrt(acc_distributive/len(TEST_RANGE))}")
-            mean_distributive += acc_associative / len(TEST_RANGE) / len(functions)**3
+            mean_distributive += np.sqrt(acc_distributive) / len(TEST_RANGE) / len(functions)**3
 
 # Identity
 print("\nIdentity:")
