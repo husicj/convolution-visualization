@@ -1,10 +1,11 @@
-#GOALS:
+# IN VISUALIZE_CONVOLUTION.PY
 #   generate visualizations of convolutions between:
 #      rectangle
 #      isoceles triangle
 #      right triangle
 #      causally decreasing exponential function
 #
+# IN CONVOLUTION_PROPERTIES.PY
 #   computationally confirm the following properties of convolution
 #    with RMS error calculation:
 #     commutativity
@@ -333,23 +334,44 @@ class Convolution:
         return convolution
 
 class ConvolutionFunctions:
-    """A class containing all the relevant functions for convolution and plotting."""
+    """A class containing all the relevant functions for convolution and plotting.
+    Also supports iteration through all the represented functions (except for the 
+    Dirac delta which also requires a normalization argument)."""
+    def __init__(self):
+        self.functions = [self.rectangle,
+                          self.right_triangle,
+                          self.isoceles_triangle,
+                          self.exponential]
 
-    def rectangle(x: float, t: float = 0) -> float:
+    @classmethod
+    def rectangle(cls, x: float, t: float = 0) -> float:
         """Rectangle function with height and width 1, centered at t."""
-        return (np.abs(x - t) < 0.5).astype(float)
+        return np.array(np.abs(x - t) < 0.5).astype(float)
 
-    def right_triangle(x: float, t: float = 0) -> float:
+    @classmethod
+    def right_triangle(cls, x: float, t: float = 0) -> float:
         """Downward sloping isoceles right triangle with height 1, and centered at t."""
-        return (np.abs(x - t) < 0.5).astype(float) * (0.5 - x + t)
+        return np.array(np.abs(x - t) < 0.5).astype(float) * (0.5 - x + t)
 
-    def isoceles_triangle(x: float, t: float = 0) -> float:
+    @classmethod
+    def isoceles_triangle(cls, x: float, t: float = 0) -> float:
         """Isoceles right triangle with base along x axis, with height 1, base 2, and centered at 0."""
-        return (np.abs(x - t) < 1).astype(float) * (1 - np.abs(x - t))
+        return np.array(np.abs(x - t) < 1).astype(float) * (1 - np.abs(x - t))
 
-    def exponential(x: float, t: float = 0) -> float:
+    @classmethod
+    def exponential(cls, x: float, t: float = 0) -> float:
         """Causally decreasing exponential function with y = 1 at x = t."""
-        return (0 <= x - t).astype(float) * np.exp(t - x)
+        return np.array(0 <= x - t).astype(float) * np.exp(t - x)
+
+    @classmethod
+    def delta(cls, x: float, t: float = 0, sample_width: float = 0.01) -> float:
+        """Dirac delta function. The sample width is required for proper behavior as an integration
+        measure."""
+        return np.array(x == t).astype(float) / sample_width
+
+    def __iter__(self):
+        return (function for function in self.functions)
+
 
 if __name__ == '__main__':
     dv0 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
