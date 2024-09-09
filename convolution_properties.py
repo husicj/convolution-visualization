@@ -31,4 +31,19 @@ for f in functions:
             for t in TEST_RANGE:
                 acc_associative += (f_gh(t) - fg_h(t)) ** 2
             print(f"(f: {f.__name__}; g: {g.__name__}) " +
-                  f"RMSD between f*(g*h) and (f*g)*h: {np.sqrt(acc_commutative/len(TEST_RANGE))}")
+                  f"RMSD between f*(g*h) and (f*g)*h: {np.sqrt(acc_associative/len(TEST_RANGE))}")
+
+# Distributivity
+print("\nDistributivity:")
+for f in functions:
+    for g in functions:
+        for h in functions:
+            acc_distributive = 0
+            f_gplush = conv.convolve(f, lambda t: g(t) + h(t))
+            fg_plus_fh = lambda t: conv.convolve(f, g)(t) + conv.convolve(f, h)(t)
+            for t in TEST_RANGE:
+                acc_distributive += (f_gplush(t) - fg_plus_fh(t)) ** 2
+            print(f"(f: {f.__name__}; g: {g.__name__}) " +
+                  f"RMSD between f*(g+h) and (f*g)+(f*h): {np.sqrt(acc_associative/len(TEST_RANGE))}")
+
+# Identity
