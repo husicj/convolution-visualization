@@ -1,5 +1,4 @@
 # Visualizing Convolutions
-## Joren Husic
 
 ## About
 This repository serves as a method for generating visualizations to
