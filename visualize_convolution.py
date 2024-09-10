@@ -97,7 +97,6 @@ class PlottingImage:
         self.image_array[y_axis, :] = np.asarray([128, 128, 128])
         self.image_array[:, x_axis] = np.asarray([128, 128, 128])
 
-
     def plot(self, x: int | np.ndarray,
              y: int | np.ndarray,
              thickness: int = 0,
@@ -170,6 +169,9 @@ class Animation:
             drawing = ImageDraw.Draw(images[-1])
             drawing.text((10,10), f"{frame}", fill=(255, 255, 255))
             drawing.text((30, 30), self.title, fill=(255, 255, 255))
+            # axis labels
+            drawing.text((480, 260), "x", fill = (255, 255, 255))
+            drawing.text((260, 480), "y", fill = (255, 255, 255))
             self._draw_legend(drawing)
         images[0].save(filename + '.gif', append_images=images[1:], save_all=True, duration=1)
 
@@ -428,42 +430,42 @@ if __name__ == '__main__':
     plot0.add_legend([("rectangle", (255,0,0)), ("right triangle", (0,0,255)), ("convolution", (0,255,0))])
     plot0.save('rectangle_and_right_triangle')
 
-    # dv1 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    # plot1 = dv1.visualize_convolution(ConvolutionFunctions.rectangle,
-    #                                   ConvolutionFunctions.isoceles_triangle,
-    #                                   frame_spacing=5)
-    # plot1.add_title("Convolution of rectangle and isoceles triangle functions")
-    # plot1.add_legend([("rectangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
-    # plot1.save('rectangle_and_isoceles_triangle')
+    dv1 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
+    plot1 = dv1.visualize_convolution(ConvolutionFunctions.rectangle,
+                                      ConvolutionFunctions.isoceles_triangle,
+                                      frame_spacing=5)
+    plot1.add_title("Convolution of rectangle and isoceles triangle functions")
+    plot1.add_legend([("rectangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
+    plot1.save('rectangle_and_isoceles_triangle')
 
-    # dv2 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 1000)
-    # plot2 = dv2.visualize_convolution(ConvolutionFunctions.rectangle,
-    #                                   ConvolutionFunctions.exponential,
-    #                                   frame_spacing=5)
-    # plot2.add_title("Convolution of rectangle and truncated exponential functions")
-    # plot2.add_legend([("rectangle", (255,0,0)), ("exponential", (0,0,255)), ("convolution", (0,255,0))])
-    # plot2.save('rectangle_and_exponential')
+    dv2 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 1000)
+    plot2 = dv2.visualize_convolution(ConvolutionFunctions.rectangle,
+                                      ConvolutionFunctions.exponential,
+                                      frame_spacing=5)
+    plot2.add_title("Convolution of rectangle and truncated exponential functions")
+    plot2.add_legend([("rectangle", (255,0,0)), ("exponential", (0,0,255)), ("convolution", (0,255,0))])
+    plot2.save('rectangle_and_exponential')
 
-    # dv3 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
-    # plot3 = dv3.visualize_convolution(ConvolutionFunctions.right_triangle,
-    #                                   ConvolutionFunctions.isoceles_triangle,
-    #                                   frame_spacing=5)
-    # plot3.add_title("Convolution of right triangle and isoceles triangle functions")
-    # plot3.add_legend([("right triangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
-    # plot3.save('right_and_isoceles_triangles')
+    dv3 = DataVisualizer((-2, 2), (-2, 2), 500, 500)
+    plot3 = dv3.visualize_convolution(ConvolutionFunctions.right_triangle,
+                                      ConvolutionFunctions.isoceles_triangle,
+                                      frame_spacing=5)
+    plot3.add_title("Convolution of right triangle and isoceles triangle functions")
+    plot3.add_legend([("right triangle", (255,0,0)), ("isoceles triangle", (0,0,255)), ("convolution", (0,255,0))])
+    plot3.save('right_and_isoceles_triangles')
 
-    # dv4 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
-    # plot4 = dv4.visualize_convolution(ConvolutionFunctions.right_triangle,
-    #                                   ConvolutionFunctions.exponential,
-    #                                   frame_spacing=5)
-    # plot4.add_title("Convolution of right triangle and truncated exponential functions")
-    # plot4.add_legend([("exponential", (0,0,255)), ("right triangle", (255,0,0)), ("convolution", (0,255,0))])
-    # plot4.save('right_triangle_and_exponential')
+    dv4 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
+    plot4 = dv4.visualize_convolution(ConvolutionFunctions.right_triangle,
+                                      ConvolutionFunctions.exponential,
+                                      frame_spacing=5)
+    plot4.add_title("Convolution of right triangle and truncated exponential functions")
+    plot4.add_legend([("exponential", (0,0,255)), ("right triangle", (255,0,0)), ("convolution", (0,255,0))])
+    plot4.save('right_triangle_and_exponential')
 
-    # dv5 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
-    # plot5 = dv5.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
-    #                                   ConvolutionFunctions.exponential,
-    #                                   frame_spacing=5)
-    # plot5.add_title("Convolution of isoceles triangle and truncated exponential functions")
-    # plot5.add_legend([("isoceles triangle", (255,0,0)), ("exponential", (0, 0, 255)), ("convolution", (0,255,0))])
-    # plot5.save('isoceles_triangle_and_exponential')
+    dv5 = DataVisualizer((-1.5, 2.5), (-2, 2), 500, 500)
+    plot5 = dv5.visualize_convolution(ConvolutionFunctions.isoceles_triangle,
+                                      ConvolutionFunctions.exponential,
+                                      frame_spacing=5)
+    plot5.add_title("Convolution of isoceles triangle and truncated exponential functions")
+    plot5.add_legend([("isoceles triangle", (255,0,0)), ("exponential", (0, 0, 255)), ("convolution", (0,255,0))])
+    plot5.save('isoceles_triangle_and_exponential')
