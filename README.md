@@ -4,7 +4,9 @@
 This repository serves as a method for generating visualizations to
 demonstrate the way that the convolution of two functions is related
 to the starting functions. The convolution, defined as
-$$ f \star g(\tau) = \int_{-\infty}^\infty f(t) g(\tau - t) dt$$
+```math
+f \star g(\tau) = \int_{-\infty}^\infty f(t) g(\tau - t) dt
+```
 can be though of as related to the area of overlap between the two
 functions (one of which is mirrored across the $y$ axis), with the
 value of $\tau$ determining the offset of the two functions along the
@@ -20,7 +22,9 @@ for a number of example convolutions sampled at a range of values,
 and showing the result to be nearly zero. Additionally, the Dirac
 delta function acts as the identity under convolution with other
 integrable functions:
-$$ f \star \delta(\tau) = \delta \star f(\tau) = f(\tau)$$
+```math
+f \star \delta(\tau) = \delta \star f(\tau) = f(\tau).
+```
 This is demonstrated with an additional animation.
 
 ## Running the code
