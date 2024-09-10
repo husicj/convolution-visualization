@@ -101,7 +101,8 @@ class PlottingImage:
     def plot(self, x: int | np.ndarray,
              y: int | np.ndarray,
              thickness: int = 0,
-             color: tuple[int, int, int] = (255, 255, 255)
+             color: tuple[int, int, int] = (255, 255, 255),
+             overwrite: bool = True
              ) -> None:
         """Draw a point in Cartesian space onto the image."""
         a, b = self._coordinate_to_pixel(x, y)
@@ -110,11 +111,21 @@ class PlottingImage:
             a = a[inside_bounds]
             b = b[inside_bounds]
         try:
-            self.image_array[a, b] = np.asarray(color)
+            # prevents complete overwrite of non-black pixels, duplicated below
+            if overwrite:
+                self.image_array[a, b] = np.asarray(color)
+            else:
+                self.image_array[a, b] = np.maximum(self.image_array[a,b], np.asarray(color))
             if thickness > 0:
                 for pixel in range(thickness):
-                    self.image_array[a, b + pixel] = np.asarray(color)
-                    self.image_array[a, b - pixel] = np.asarray(color)
+                    if overwrite:
+                        self.image_array[a, b + pixel] = np.asarray(color)
+                    else:
+                        self.image_array[a, b + pixel] = np.maximum(np.asarray(color), np.self.image_array[a,b-pixel])
+                    if overwrite:
+                        self.image_array[a, b - pixel] = np.asarray(color)
+                    else:
+                        self.image_array[a, b - pixel] = np.maximum(np.asarray(color), np.self.image_array[a,b-pixel])
         except IndexError:
             pass
 
@@ -197,8 +208,9 @@ class DataVisualizer:
                      y: np.ndarray,
                      color: tuple[int, int, int] = (128, 128, 128)
                      ) -> PlottingImage:
-        """Fills the area of x and y coordinates in the canvas."""
-        self.canvas.plot(x, y, color=color)
+        """Fills the area of x and y coordinates in the canvas if they are not already
+        set."""
+        self.canvas.plot(x, y, color=color, overwrite=False)
 
     def function_plotter(self,
                          function: typing.Callable[[float], float],
@@ -296,7 +308,7 @@ class DataVisualizer:
                                                         t[frame],
                                                         color=parameter_function_color,
                                                         overlap_function=overlap_function)
-                animation_list.append(plot)
+                animation_list.append(parameter_plot)
                 self.canvas.clear()
         self.animation = Animation(animation_list)
         return self.animation.copy()
@@ -325,7 +337,7 @@ class DataVisualizer:
                                                      lambda x, t: g_plotting_factor * g(-x, -t),
                                                      self.x,
                                                      self.x,
-                                                     frame_spacing=5,
+                                                     frame_spacing=frame_spacing,
                                                      function_color=(0,255,0),
                                                      parameter_function_color=(0,0,255),
                                                      overlap_function=f
