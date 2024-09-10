@@ -25,7 +25,7 @@ integrable functions:
 ```math
 f \star \delta(\tau) = \delta \star f(\tau) = f(\tau).
 ```
-This is demonstrated with an additional animation.
+This is demonstrated with an additional set of animations.
 
 ## Running the code
 This code has been tested with Python 3.11. It uses a number of features
